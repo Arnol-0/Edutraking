@@ -111,7 +111,11 @@ export default function App() {
 
   const calculateDelay = (timeStr) => {
     if (!timeStr) return { type: 'none', level: 'A TIEMPO', diff: 0 };
-    const [hours, minutes] = timeStr.split(':').map(Number);
+    const parts = timeStr.split(':');
+    if (parts.length !== 2) return { type: 'none', level: 'A TIEMPO', diff: 0 };
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes)) return { type: 'none', level: 'A TIEMPO', diff: 0 };
     const arrivalMinutes = hours * 60 + minutes;
     const expectedMinutes = 8 * 60; // 8:00 AM
     
@@ -1047,50 +1051,54 @@ const handleSelectStudent = (student) => {
                               </div>
                             )}
 
-                         {foundStudent && (
+                         {foundStudent && (() => {
+                           const delay = calculateDelay(arrivalTime);
+                           return (
                            <div key="found-student-details" className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 pt-6 border-t border-slate-100 animate-in fade-in">
                               <div className="space-y-3">
                                  <label className="text-[10px] lg:text-[11px] font-black uppercase text-slate-400 tracking-widest">2. Detalles de Ingreso</label>
                                  <div className="flex gap-3">
                                     <input type="time" value={arrivalTime} onChange={e => setArrivalTime(e.target.value)} className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 focus:border-[#4338ca] outline-none text-[14px] lg:text-[15px] font-medium" />
-                                    <select className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 outline-none text-[14px] lg:text-[15px] font-medium cursor-pointer">
-                                       <option>Tránsito / Tráfico</option>
-                                       <option>Cita Médica</option>
-                                       <option>Problema Familiar</option>
-                                       <option>Clima</option>
-                                       <option>Sin Justificación</option>
-                                    </select>
+                                    {delay.type === 'none' ? (
+                                       <select disabled className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 outline-none text-[14px] lg:text-[15px] font-medium opacity-60 appearance-none">
+                                          <option>Llegó a la hora</option>
+                                       </select>
+                                    ) : (
+                                       <select className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 outline-none text-[14px] lg:text-[15px] font-medium cursor-pointer focus:border-[#4338ca]">
+                                          <option>Tránsito / Tráfico</option>
+                                          <option>Cita Médica</option>
+                                          <option>Problema Familiar</option>
+                                          <option>Clima</option>
+                                          <option>Sin Justificación</option>
+                                       </select>
+                                    )}
                                  </div>
                               </div>
                               <div className="space-y-3">
                                  <label className="text-[10px] lg:text-[11px] font-black uppercase text-slate-400 tracking-widest">3. Estado Calculado</label>
-                                 {(() => {
-                                    const delay = calculateDelay(arrivalTime);
-                                    if (delay.type === 'none') {
-                                       return <div key="delay-none" className="bg-emerald-50 text-emerald-700 border border-emerald-200 p-3.5 lg:p-4 rounded-xl font-bold flex items-center gap-3 text-[14px] lg:text-[15px]"><CheckCircle2 size={20}/> Llegada a la hora correspondiente</div>;
-                                    }
-                                    return (
-                                       <div key="delay-some" className={`p-3.5 lg:p-4 rounded-xl font-bold flex items-center gap-3 text-[14px] lg:text-[15px] border ${
-                                          delay.type === 'low' ? 'bg-slate-50 text-slate-700 border-slate-200' :
-                                          delay.type === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                          'bg-red-50 text-red-700 border-red-200'
-                                       }`}>
-                                          <AlertTriangle size={20} />
-                                          <div>
-                                             Atraso {delay.level} <span className="opacity-75 font-medium">({delay.diff} min tarde)</span>
-                                          </div>
+                                 {delay.type === 'none' ? (
+                                    <div key="delay-none" className="bg-emerald-50 text-emerald-700 border border-emerald-200 p-3.5 lg:p-4 rounded-xl font-bold flex items-center gap-3 text-[14px] lg:text-[15px]"><CheckCircle2 size={20}/> Llegada a la hora correspondiente</div>
+                                 ) : (
+                                    <div key="delay-some" className={`p-3.5 lg:p-4 rounded-xl font-bold flex items-center gap-3 text-[14px] lg:text-[15px] border ${
+                                       delay.type === 'low' ? 'bg-slate-50 text-slate-700 border-slate-200' :
+                                       delay.type === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                       'bg-red-50 text-red-700 border-red-200'
+                                    }`}>
+                                       <AlertTriangle size={20} />
+                                       <div>
+                                          Atraso {delay.level} <span className="opacity-75 font-medium">({delay.diff} min tarde)</span>
                                        </div>
-                                    );
-                                 })()}
+                                    </div>
+                                 )}
                               </div>
-                              
                               <div className="col-span-1 sm:col-span-2 pt-2 lg:pt-4">
                                 <button onClick={() => { setFoundStudent(null); setReceptionSearch(''); }} className="w-full bg-gradient-to-r from-[#4338ca] to-[#4f46e5] text-white shadow-md hover:shadow-[#4338ca]/30 py-4 lg:py-5 rounded-2xl font-black text-[14px] lg:text-[15px] uppercase tracking-widest shadow-xl shadow-blue-500/40 hover:bg-blue-700 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 lg:gap-3">
                                    <CheckCircle2 size={24} className="scale-90 lg:scale-100" /> Confirmar Ingreso
                                 </button>
                               </div>
                            </div>
-                         )}
+                           );
+                         })()}
                       </div>
                    </div>
                 </motion.div>
