@@ -1017,14 +1017,25 @@ const handleSelectStudent = (student) => {
                                   <Scanner 
                                      onScan={(results) => {
                                         if (results && results.length > 0) {
-                                           const value = results[0].rawValue;
-                                           const student = students.find(s => s.id === value || s.name === value);
+                                           const rawValue = results[0].rawValue;
+                                           let searchId = rawValue;
+                                           
+                                           // Parse the ENTRY token if it exists (Format: ENTRY:studentId-timestamp)
+                                           if (rawValue.startsWith('ENTRY:')) {
+                                              const tokenStr = rawValue.substring(6);
+                                              const lastDashIdx = tokenStr.lastIndexOf('-');
+                                              if (lastDashIdx !== -1) {
+                                                 searchId = tokenStr.substring(0, lastDashIdx);
+                                              }
+                                           }
+
+                                           const student = students.find(s => s.id === searchId || s.name === searchId || s.id === rawValue);
                                            if (student) {
                                               setFoundStudent(student);
                                               setIsScanningQR(false);
                                               setReceptionSearch('');
                                            } else {
-                                              setReceptionSearch(value);
+                                              setReceptionSearch(searchId);
                                            }
                                         }
                                      }}
