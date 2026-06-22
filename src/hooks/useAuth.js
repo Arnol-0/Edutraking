@@ -12,6 +12,11 @@ export function useAuth() {
   });
   
   const [currentUser, setCurrentUser] = useState(() => {
+    const keep = localStorage.getItem('edutracking_keep_session') === 'true';
+    if (!keep) {
+       localStorage.removeItem('edutracking_current_user');
+       return null;
+    }
     const saved = localStorage.getItem('edutracking_current_user');
     return saved ? JSON.parse(saved) : null;
   });
@@ -28,9 +33,10 @@ export function useAuth() {
     }
   }, [currentUser]);
 
-  const login = (email, password) => {
+  const login = (email, password, keepSession = false) => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
+      localStorage.setItem('edutracking_keep_session', keepSession ? 'true' : 'false');
       setCurrentUser(user);
       return user;
     }

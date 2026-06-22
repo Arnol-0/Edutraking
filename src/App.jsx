@@ -99,10 +99,10 @@ export default function App() {
   const [receptionSearch, setReceptionSearch] = useState('');
   const [isScanningQR, setIsScanningQR] = useState(false);
   const [foundStudent, setFoundStudent] = useState(null);
-  const [isOtherAccount, setIsOtherAccount] = useState(false);
+  const [keepSession, setKeepSession] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('admin@institucion.edu');
-  const [loginPassword, setLoginPassword] = useState('admin');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   
   const [arrivalTime, setArrivalTime] = useState(() => {
     const now = new Date();
@@ -164,7 +164,7 @@ export default function App() {
   const handleLogin = () => {
     setIsStarting(true);
     setTimeout(() => {
-      const loggedInUser = login(loginEmail.trim(), loginPassword.trim());
+      const loggedInUser = login(loginEmail.trim(), loginPassword.trim(), keepSession);
       if (loggedInUser) {
          changeView(loggedInUser.role === 'student' ? 'profile' : 'dashboard');
          setLoginError('');
@@ -233,77 +233,38 @@ const handleSelectStudent = (student) => {
               
               <div className="space-y-6">
                  
-                 {!isOtherAccount ? (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                       <div className="glass-card rounded-2xl shadow-sm p-4 px-5 flex items-center justify-between group cursor-default relative overflow-hidden transition hover:-translate-y-1 hover:shadow-md">
-                          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white/60 to-transparent flex items-center justify-end pr-5 text-slate-400">
-                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="scale-x-[-1] opacity-70"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                    <div className="space-y-3">
+                       <label className="text-[12px] font-black text-slate-700 block ml-1">Correo Institucional</label>
+                       <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                             <Mail size={18} />
                           </div>
-                          <div className="flex items-center gap-4 relative z-10 w-full">
-                             <div className="relative">
-                                <div className="w-12 h-12 rounded-xl overflow-hidden border border-white shadow-[0_4px_10px_rgba(0,0,0,0.1)] shrink-0">
-                                   <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Henderson&backgroundColor=e2e8f0" alt="avatar" className="w-full h-full object-cover scale-110" />
-                                </div>
-                                <div className="absolute -bottom-1 -right-1 w-[18px] h-[18px] bg-emerald-500 border-2 border-white rounded-full shadow-sm"></div>
-                             </div>
-                             <div className="flex-1 min-w-0 pr-10">
-                                <p className="text-[10px] font-black uppercase gradient-text tracking-widest mb-0.5">Usuario Detectado</p>
-                                <p className="text-[17px] font-bold text-slate-900 leading-tight truncate">Decano Henderson</p>
-                                <p className="text-[12px] text-slate-500 font-medium truncate mt-0.5">admin@institucion.edu</p>
-                             </div>
+                          <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="ejemplo@institucion.edu" className="w-full bg-white/80 border border-slate-200/60 shadow-inner outline-none rounded-[14px] pl-12 pr-4 py-3.5 text-slate-800 font-bold transition focus:bg-white focus:border-[#4338ca] focus:ring-4 focus:ring-indigo-500/10" />
+                       </div>
+                    </div>
+   
+                    <div className="space-y-3">
+                       <label className="text-[12px] font-black text-slate-700 block ml-1">Contraseña</label>
+                       <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                           </div>
+                          <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Contraseña" className="w-full bg-slate-100/70 border border-slate-200 outline-none rounded-[14px] pl-12 pr-4 py-3.5 text-slate-800 font-black text-2xl tracking-[0.25em] placeholder:text-sm placeholder:tracking-normal placeholder:font-medium transition focus:bg-white focus:border-[#4338ca] focus:ring-4 focus:ring-blue-500/10" />
                        </div>
-                       
-                       <div className="space-y-3">
-                          <label className="text-[12px] font-black text-slate-700 block ml-1">Confirmar Contraseña</label>
-                          <div className="relative">
-                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                             </div>
-                             <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Introduzca la clave" className="w-full bg-white/80 border border-slate-200/60 shadow-inner outline-none rounded-[14px] pl-12 pr-4 py-3.5 text-slate-800 font-black text-2xl tracking-[0.25em] placeholder:text-sm placeholder:tracking-normal placeholder:font-medium transition focus:bg-white focus:border-[#4338ca] focus:ring-4 focus:ring-indigo-500/10" />
+                    </div>
+                    
+                    {loginError && <p className="text-red-500 text-sm font-bold text-center">{loginError}</p>}
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-1">
+                       <label className="flex items-center gap-2 cursor-pointer" onClick={() => setKeepSession(!keepSession)}>
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center border shadow-sm transition ${keepSession ? 'bg-[#4338ca] text-white border-[#4338ca]' : 'bg-white text-transparent border-slate-300'}`}>
+                            <CheckCircle2 size={14} strokeWidth={4} className="scale-75" />
                           </div>
-                          {loginError && <p className="text-red-500 text-sm font-bold text-center">{loginError}</p>}
-                       </div>
-                       
-                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-1">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                             <div className="w-5 h-5 rounded-md bg-[#4338ca] flex items-center justify-center text-white border border-[#4338ca] shadow-sm">
-                               <CheckCircle2 size={14} strokeWidth={4} className="scale-75" />
-                             </div>
-                             <span className="text-[13px] font-bold text-slate-600">Mantener sesión activa</span>
-                          </label>
-                          <button onClick={() => { setIsOtherAccount(true); setLoginEmail(''); setLoginPassword(''); setLoginError(''); }} className="text-[13px] font-bold text-slate-400 hover:gradient-text hover:underline transition text-left sm:text-right">¿No eres administrador?</button>
-                       </div>
-                    </motion.div>
-                 ) : (
-                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                       <div className="space-y-3">
-                          <label className="text-[12px] font-black text-slate-700 block ml-1">Correo Institucional</label>
-                          <div className="relative">
-                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                <Mail size={18} />
-                             </div>
-                             <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="ejemplo@institucion.edu" className="w-full bg-white/80 border border-slate-200/60 shadow-inner outline-none rounded-[14px] pl-12 pr-4 py-3.5 text-slate-800 font-bold transition focus:bg-white focus:border-[#4338ca] focus:ring-4 focus:ring-indigo-500/10" />
-                          </div>
-                       </div>
-      
-                       <div className="space-y-3">
-                          <label className="text-[12px] font-black text-slate-700 block ml-1">Contraseña</label>
-                          <div className="relative">
-                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                             </div>
-                             <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Contraseña" className="w-full bg-slate-100/70 border border-slate-200 outline-none rounded-[14px] pl-12 pr-4 py-3.5 text-slate-800 font-black text-2xl tracking-[0.25em] placeholder:text-sm placeholder:tracking-normal placeholder:font-medium transition focus:bg-white focus:border-[#4338ca] focus:ring-4 focus:ring-blue-500/10" />
-                          </div>
-                       </div>
-                       
-                       {loginError && <p className="text-red-500 text-sm font-bold text-center">{loginError}</p>}
-                       
-                       <div className="flex items-center justify-between py-1 mt-2">
-                          <button onClick={() => { setIsOtherAccount(false); setLoginEmail('admin@institucion.edu'); setLoginPassword(''); setLoginError(''); }} className="text-[13px] font-bold gradient-text hover:underline transition flex items-center gap-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> <span>Atrás a la cuenta detectada</span></button>
-                       </div>
-                    </motion.div>
-                 )}
+                          <span className="text-[13px] font-bold text-slate-600">Mantener sesión activa</span>
+                       </label>
+                    </div>
+                 </motion.div>
 
                  <button 
                    disabled={isStarting}
@@ -318,7 +279,7 @@ const handleSelectStudent = (student) => {
                    ) : (
                       <>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> 
-                        <span>{isOtherAccount ? 'INICIAR SESIÓN' : 'INICIAR TURNO DE DÍA'}</span>
+                        <span>INICIAR SESIÓN</span>
                       </>
                    )}
                  </button>
@@ -1052,7 +1013,17 @@ const handleSelectStudent = (student) => {
                             <div className="flex flex-col sm:flex-row gap-4">
                                <input value={receptionSearch} onChange={(e) => setReceptionSearch(e.target.value)} className="flex-1 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 focus:border-[#4338ca] focus:ring-2 focus:ring-blue-100 outline-none text-[14px] lg:text-[15px] font-medium transition" placeholder="Ingrese nombre o ID del alumno..." />
                                <button 
-                                 onClick={() => setFoundStudent(students[0])} 
+                                 onClick={() => {
+                                    const searchInput = receptionSearch.trim().toLowerCase();
+                                    if (!searchInput) return;
+                                    const student = students.find(s => s.id.toLowerCase() === searchInput || s.name.toLowerCase() === searchInput);
+                                    if (student) {
+                                       setFoundStudent(student);
+                                       setReceptionSearch('');
+                                    } else {
+                                       alert('Estudiante no encontrado');
+                                    }
+                                 }} 
                                  className="bg-[#1e293b] text-white py-3.5 lg:py-0 sm:px-8 rounded-xl font-bold text-[14px] hover:bg-slate-800 transition w-full sm:w-auto shadow-md hover:shadow-xl"
                                >
                                  Buscar
