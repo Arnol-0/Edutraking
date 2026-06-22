@@ -147,8 +147,8 @@ export default function App() {
      addStudent({ ...newStudentData, classOf: '2028' });
      createUser({ 
         name: newStudentData.name, 
-        email: newStudentData.email, 
-        password: newStudentData.password, 
+        email: newStudentData.email.trim(), 
+        password: newStudentData.password.trim(), 
         role: 'student', 
         rut: newStudentData.id 
      });
@@ -162,7 +162,7 @@ export default function App() {
   const handleLogin = () => {
     setIsStarting(true);
     setTimeout(() => {
-      const loggedInUser = login(loginEmail, loginPassword);
+      const loggedInUser = login(loginEmail.trim(), loginPassword.trim());
       if (loggedInUser) {
          changeView(loggedInUser.role === 'student' ? 'profile' : 'dashboard');
          setLoginError('');
