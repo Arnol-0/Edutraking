@@ -13,17 +13,21 @@ export function useStudents() {
   }, [students]);
 
   const addStudent = (newStudent) => {
-    // Add default metrics when creating student
     setStudents([...students, { 
       ...newStudent, 
       total: 0, 
-      lastDelay: "0 este mes", 
+      lastDelay: "Ninguno", 
       compliance: 100, 
       level: "A TIEMPO", 
-      type: "low", 
-      probation: "NINGUNO" 
+      type: "none", 
+      probation: "NINGUNO",
+      history: []
     }]);
   };
 
-  return { students, addStudent };
+  const updateStudent = (id, updatedData) => {
+    setStudents(students.map(s => s.id === id ? { ...s, ...updatedData } : s));
+  };
+
+  return { students, addStudent, updateStudent };
 }

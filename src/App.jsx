@@ -51,10 +51,10 @@ const SecureQR = ({ studentId, onExpire }) => {
             transition={{ duration: 1, ease: "linear" }}
           />
         </div>
-        <span className="text-[12px] font-bold text-slate-500 w-5 text-right">{timeLeft}s</span>
+        <span className="text-[12px] font-bold text-slate-500 w-5 text-right"><span>{timeLeft}</span>s</span>
       </div>
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-3 text-center leading-tight">
-        QR Dinámico de Seguridad<br/>Expira en {timeLeft}s
+        QR Dinámico de Seguridad<br/>Expira en <span>{timeLeft}</span>s
       </p>
     </div>
   );
@@ -85,7 +85,7 @@ const REPORT_DATA = [
  * Gestiona la interfaz, navegación interactiva y animaciones de página (Framer).
  */
 export default function App() {
-  const { students, addStudent } = useStudents();
+  const { students, addStudent, updateStudent } = useStudents();
   const studentsRef = useRef(students);
   useEffect(() => { studentsRef.current = students; }, [students]);
   const { currentUser, login, logout, users, createUser, deleteUser } = useAuth();
@@ -103,6 +103,7 @@ export default function App() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [delayReason, setDelayReason] = useState('Tránsito / Tráfico');
   
   const [arrivalTime, setArrivalTime] = useState(() => {
     const now = new Date();
@@ -134,6 +135,7 @@ export default function App() {
   const [showSecureQR, setShowSecureQR] = useState(false);
   
   const [isClockInOpen, setIsClockInOpen] = useState(false);
+  const [notification, setNotification] = useState({ isOpen: false, type: 'success', title: '', message: '' });
   const [clockInStudent, setClockInStudent] = useState(null);
   const [clockInTime, setClockInTime] = useState('08:00');
 
@@ -142,9 +144,9 @@ export default function App() {
     const hour = parseInt(timeParts[0]);
     const min = parseInt(timeParts[1]);
     if (hour > 8 || (hour === 8 && min >= 30)) {
-        alert(`ALERTA: El estudiante ${clockInStudent.name} llegó después de 30 minutos de tolerancia (${clockInTime}).\n\n¡CORREO ENVIADO automáticamente a los padres!`);
+        setNotification({ isOpen: true, type: 'critical', title: 'Alerta de Atraso Grave', message: `El estudiante ${clockInStudent.name} llegó después de 30 minutos de tolerancia (${clockInTime}). ¡CORREO ENVIADO automáticamente a los padres!` });
     } else {
-        alert(`Entrada registrada a las ${clockInTime} exitosamente.`);
+        setNotification({ isOpen: true, type: 'success', title: 'Entrada Registrada', message: `Entrada registrada a las ${clockInTime} exitosamente.` });
     }
     setIsClockInOpen(false);
   };
@@ -789,17 +791,17 @@ const handleSelectStudent = (student) => {
                          </div>
 
                          <div className="space-y-4">
-                            {CHRONOLOGY.map((item, idx) => (
+                            {(profileTarget.history && profileTarget.history.length > 0 ? profileTarget.history : CHRONOLOGY).map((item, idx, arr) => (
                               <div key={item.id} className="relative pl-0 md:pl-7">
-                                 {idx !== CHRONOLOGY.length - 1 && <div className="absolute top-12 bottom-[-24px] left-[35px] w-[2px] bg-slate-200 hidden md:block"></div>}
+                                 {idx !== arr.length - 1 && <div className="absolute top-12 bottom-[-24px] left-[35px] w-[2px] bg-slate-200 hidden md:block"></div>}
                                  
                                  <div className="bg-white rounded-3xl p-5 lg:p-6 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col md:flex-row gap-5 lg:gap-6 hover:shadow-md transition">
-                                    <div className={`hidden md:block absolute left-0 top-0 bottom-0 w-1.5 ${item.type === 'critical' ? 'bg-red-600' : item.type === 'medium' ? 'bg-[#c2410c]' : 'bg-[#4338ca]'}`}></div>
-                                    <div className={`md:hidden absolute top-0 left-0 right-0 h-1.5 ${item.type === 'critical' ? 'bg-red-600' : item.type === 'medium' ? 'bg-[#c2410c]' : 'bg-[#4338ca]'}`}></div>
+                                    <div className={`hidden md:block absolute left-0 top-0 bottom-0 w-1.5 ${item.type === 'critical' ? 'bg-red-600' : item.type === 'medium' ? 'bg-[#c2410c]' : item.type === 'success' ? 'bg-emerald-500' : 'bg-[#4338ca]'}`}></div>
+                                    <div className={`md:hidden absolute top-0 left-0 right-0 h-1.5 ${item.type === 'critical' ? 'bg-red-600' : item.type === 'medium' ? 'bg-[#c2410c]' : item.type === 'success' ? 'bg-emerald-500' : 'bg-[#4338ca]'}`}></div>
                                     
                                     <div className="flex gap-4 lg:gap-6 flex-1 flex-col sm:flex-row items-center sm:items-start text-center sm:text-left mt-2 md:mt-0">
-                                       <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center shrink-0 mt-1 ${item.type === 'critical' ? 'bg-red-50 text-red-600' : item.type === 'medium' ? 'bg-orange-50 text-[#c2410c]' : 'bg-blue-50 gradient-text'}`}>
-                                          <item.icon size={24} strokeWidth={2.5} />
+                                       <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center shrink-0 mt-1 ${item.type === 'critical' ? 'bg-red-50 text-red-600' : item.type === 'medium' ? 'bg-orange-50 text-[#c2410c]' : item.type === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 gradient-text'}`}>
+                                          {item.type === 'success' ? <CheckCircle2 size={24} strokeWidth={2.5} /> : <Clock size={24} strokeWidth={2.5} />}
                                        </div>
                                        <div className="space-y-3 w-full">
                                           <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start pt-1 gap-3 sm:gap-0">
@@ -808,7 +810,7 @@ const handleSelectStudent = (student) => {
                                                 <p className="text-[12px] lg:text-[13px] text-slate-500 mt-0.5">Registrado por: {item.recordedBy}</p>
                                              </div>
                                              <div className="bg-slate-50 px-3 py-1.5 rounded-lg text-slate-500 text-[11px] font-bold border border-slate-100 shrink-0">
-                                                {item.date}
+                                                {item.date} {item.time}
                                              </div>
                                           </div>
                                           <p className="text-[12px] lg:text-[13px] italic text-slate-600 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">"{item.note}"</p>
@@ -1025,7 +1027,7 @@ const handleSelectStudent = (student) => {
                                        setFoundStudent(student);
                                        setReceptionSearch('');
                                     } else {
-                                       alert('Estudiante no encontrado');
+                                       setNotification({ isOpen: true, type: 'warning', title: 'No Encontrado', message: 'No se ha encontrado un estudiante con esos datos.' });
                                     }
                                  }} 
                                  className="bg-[#1e293b] text-white py-3.5 lg:py-0 sm:px-8 rounded-xl font-bold text-[14px] hover:bg-slate-800 transition w-full sm:w-auto shadow-md hover:shadow-xl"
@@ -1035,70 +1037,95 @@ const handleSelectStudent = (student) => {
                             </div>
                          </div>
                             
-                            {foundStudent && (
-                              <div key="found-student-card" className="mt-6 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 lg:gap-5 p-5 bg-blue-50/50 border border-blue-100 rounded-2xl animate-in fade-in slide-in-from-top-4">
-                                 <div className="w-12 h-12 bg-[#4338ca] rounded-xl text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
-                                    {foundStudent.name[0]}
-                                 </div>
-                                 <div className="flex-1">
-                                    <p className="font-bold text-slate-900 text-[15px] lg:text-[16px]">{foundStudent.name}</p>
-                                    <p className="text-[12px] lg:text-[13px] text-slate-500 font-medium">ID: {foundStudent.id} • {foundStudent.grade}</p>
-                                 </div>
-                                 <div className="bg-white px-4 py-2 rounded-lg border border-slate-200 shrink-0 w-full sm:w-auto">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase block text-center">Atraso #</span>
-                                    <span className="text-[18px] font-black gradient-text text-center block leading-none">{foundStudent.total + 1}</span>
-                                 </div>
-                              </div>
-                            )}
+                            {foundStudent && (() => {
+                              const delay = calculateDelay(arrivalTime);
+                              return (
+                                <div key="found-student-content" className="space-y-6 mt-6">
+                                  <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 lg:gap-5 p-5 bg-blue-50/50 border border-blue-100 rounded-2xl animate-in fade-in slide-in-from-top-4">
+                                     <div className="w-12 h-12 bg-[#4338ca] rounded-xl text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+                                        {foundStudent.name[0]}
+                                     </div>
+                                     <div className="flex-1">
+                                        <p className="font-bold text-slate-900 text-[15px] lg:text-[16px]">{foundStudent.name}</p>
+                                        <p className="text-[12px] lg:text-[13px] text-slate-500 font-medium">ID: {foundStudent.id} • {foundStudent.grade}</p>
+                                     </div>
+                                     <div className={`px-4 py-2 rounded-lg border shrink-0 w-full sm:w-auto ${delay.type === 'none' ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'}`}>
+                                        <span className={`text-[10px] font-bold uppercase block text-center ${delay.type === 'none' ? 'text-emerald-600' : 'text-slate-400'}`}>{delay.type === 'none' ? 'ESTADO' : 'Atraso #'}</span>
+                                        <span className={`text-[18px] font-black text-center block leading-none ${delay.type === 'none' ? 'text-emerald-600' : 'gradient-text'}`}>{delay.type === 'none' ? 'A TIEMPO' : (foundStudent.total || 0) + 1}</span>
+                                     </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 pt-6 border-t border-slate-100 animate-in fade-in">
+                                     <div className="space-y-3">
+                                        <label className="text-[10px] lg:text-[11px] font-black uppercase text-slate-400 tracking-widest">2. Detalles de Ingreso</label>
+                                        <div className="flex gap-3">
+                                           <input type="time" value={arrivalTime} onChange={e => setArrivalTime(e.target.value)} className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 focus:border-[#4338ca] outline-none text-[14px] lg:text-[15px] font-medium" />
+                                           {delay.type === 'none' ? (
+                                              <select disabled className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 outline-none text-[14px] lg:text-[15px] font-medium opacity-60 appearance-none">
+                                                 <option>Llegó a la hora</option>
+                                              </select>
+                                           ) : (
+                                              <select value={delayReason} onChange={e => setDelayReason(e.target.value)} className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 outline-none text-[14px] lg:text-[15px] font-medium cursor-pointer focus:border-[#4338ca]">
+                                                 <option>Tránsito / Tráfico</option>
+                                                 <option>Cita Médica</option>
+                                                 <option>Problema Familiar</option>
+                                                 <option>Clima</option>
+                                                 <option>Sin Justificación</option>
+                                              </select>
+                                           )}
+                                        </div>
+                                     </div>
+                                     <div className="space-y-3">
+                                        <label className="text-[10px] lg:text-[11px] font-black uppercase text-slate-400 tracking-widest">3. Estado Calculado</label>
+                                        {delay.type === 'none' ? (
+                                           <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 p-3.5 lg:p-4 rounded-xl font-bold flex items-center gap-3 text-[14px] lg:text-[15px]"><CheckCircle2 size={20}/> Llegada a la hora correspondiente</div>
+                                        ) : (
+                                           <div className={`p-3.5 lg:p-4 rounded-xl font-bold flex items-center gap-3 text-[14px] lg:text-[15px] border ${
+                                              delay.type === 'low' ? 'bg-slate-50 text-slate-700 border-slate-200' :
+                                              delay.type === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                              'bg-red-50 text-red-700 border-red-200'
+                                           }`}>
+                                              <AlertTriangle size={20} />
+                                              <div>
+                                                 Atraso {delay.level} <span className="opacity-75 font-medium">({delay.diff} min tarde)</span>
+                                              </div>
+                                           </div>
+                                        )}
+                                     </div>
+                                     <div className="col-span-1 sm:col-span-2 pt-2 lg:pt-4">
+                                       <button onClick={() => { 
+                                          const historyItem = {
+                                             id: Date.now(),
+                                             title: delay.type === 'none' ? "Ingreso a Tiempo" : delayReason,
+                                             recordedBy: currentUser?.name || "Sistema",
+                                             date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '').toUpperCase(),
+                                             time: arrivalTime,
+                                             level: delay.type === 'none' ? "EN HORA" : `RETRASO ${delay.level} (${delay.diff}M)`,
+                                             note: delay.type === 'none' ? "El estudiante llegó puntualmente." : `Motivo reportado: ${delayReason}`,
+                                             type: delay.type === 'none' ? 'success' : delay.type
+                                          };
+                                          
+                                          const updatedHistory = [historyItem, ...(foundStudent.history || [])];
+                                          const newTotal = delay.type === 'none' ? (foundStudent.total || 0) : (foundStudent.total || 0) + 1;
+                                          
+                                          updateStudent(foundStudent.id, {
+                                             history: updatedHistory,
+                                             total: newTotal,
+                                             lastDelay: delay.type !== 'none' ? `${delay.diff} min` : foundStudent.lastDelay,
+                                             type: delay.type !== 'none' ? delay.type : foundStudent.type,
+                                             level: delay.type !== 'none' ? delay.level : foundStudent.level
+                                          });
 
-                         {foundStudent && (() => {
-                           const delay = calculateDelay(arrivalTime);
-                           return (
-                           <div key="found-student-details" className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 pt-6 border-t border-slate-100 animate-in fade-in">
-                              <div className="space-y-3">
-                                 <label className="text-[10px] lg:text-[11px] font-black uppercase text-slate-400 tracking-widest">2. Detalles de Ingreso</label>
-                                 <div className="flex gap-3">
-                                    <input type="time" value={arrivalTime} onChange={e => setArrivalTime(e.target.value)} className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 focus:border-[#4338ca] outline-none text-[14px] lg:text-[15px] font-medium" />
-                                    {delay.type === 'none' ? (
-                                       <select disabled className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 outline-none text-[14px] lg:text-[15px] font-medium opacity-60 appearance-none">
-                                          <option>Llegó a la hora</option>
-                                       </select>
-                                    ) : (
-                                       <select className="w-1/2 bg-slate-50 p-3.5 lg:p-4 rounded-xl border border-slate-200 outline-none text-[14px] lg:text-[15px] font-medium cursor-pointer focus:border-[#4338ca]">
-                                          <option>Tránsito / Tráfico</option>
-                                          <option>Cita Médica</option>
-                                          <option>Problema Familiar</option>
-                                          <option>Clima</option>
-                                          <option>Sin Justificación</option>
-                                       </select>
-                                    )}
-                                 </div>
-                              </div>
-                              <div className="space-y-3">
-                                 <label className="text-[10px] lg:text-[11px] font-black uppercase text-slate-400 tracking-widest">3. Estado Calculado</label>
-                                 {delay.type === 'none' ? (
-                                    <div key="delay-none" className="bg-emerald-50 text-emerald-700 border border-emerald-200 p-3.5 lg:p-4 rounded-xl font-bold flex items-center gap-3 text-[14px] lg:text-[15px]"><CheckCircle2 size={20}/> Llegada a la hora correspondiente</div>
-                                 ) : (
-                                    <div key="delay-some" className={`p-3.5 lg:p-4 rounded-xl font-bold flex items-center gap-3 text-[14px] lg:text-[15px] border ${
-                                       delay.type === 'low' ? 'bg-slate-50 text-slate-700 border-slate-200' :
-                                       delay.type === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                       'bg-red-50 text-red-700 border-red-200'
-                                    }`}>
-                                       <AlertTriangle size={20} />
-                                       <div>
-                                          Atraso {delay.level} <span className="opacity-75 font-medium">({delay.diff} min tarde)</span>
-                                       </div>
-                                    </div>
-                                 )}
-                              </div>
-                              <div className="col-span-1 sm:col-span-2 pt-2 lg:pt-4">
-                                <button onClick={() => { setFoundStudent(null); setReceptionSearch(''); }} className="w-full bg-gradient-to-r from-[#4338ca] to-[#4f46e5] text-white shadow-md hover:shadow-[#4338ca]/30 py-4 lg:py-5 rounded-2xl font-black text-[14px] lg:text-[15px] uppercase tracking-widest shadow-xl shadow-blue-500/40 hover:bg-blue-700 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 lg:gap-3">
-                                   <CheckCircle2 size={24} className="scale-90 lg:scale-100" /> Confirmar Ingreso
-                                </button>
-                              </div>
-                           </div>
-                           );
-                         })()}
+                                          setNotification({ isOpen: true, type: delay.type === 'none' ? 'success' : 'warning', title: delay.type === 'none' ? 'Ingreso Registrado' : 'Atraso Registrado', message: delay.type === 'none' ? 'Ingreso registrado correctamente a tiempo.' : `Atraso de ${delay.diff} min registrado correctamente.` });
+                                          setFoundStudent(null); 
+                                          setReceptionSearch(''); 
+                                       }} className="w-full bg-gradient-to-r from-[#4338ca] to-[#4f46e5] text-white shadow-md hover:shadow-[#4338ca]/30 py-4 lg:py-5 rounded-2xl font-black text-[14px] lg:text-[15px] uppercase tracking-widest shadow-xl shadow-blue-500/40 hover:bg-blue-700 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 lg:gap-3">
+                                          <CheckCircle2 size={24} className="scale-90 lg:scale-100" /> Confirmar Ingreso
+                                       </button>
+                                     </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                       </div>
                    </div>
                 </motion.div>
@@ -1165,6 +1192,24 @@ const handleSelectStudent = (student) => {
                     <button onClick={() => setIsAddStudentOpen(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition">Cancelar</button>
                     <button onClick={handleAddStudent} className="flex-[2] py-3 bg-gradient-to-r from-[#4338ca] to-[#4f46e5] text-white shadow-md hover:shadow-[#4338ca]/30 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2"><Plus size={16}/> Añadir Directorio</button>
                  </div>
+              </motion.div>
+           </div>
+        )}
+     </AnimatePresence>
+
+     {/* MODAL NOTIFICACIÓN */}
+     <AnimatePresence>
+        {notification.isOpen && (
+           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white rounded-3xl p-6 lg:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center">
+                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${notification.type === 'success' ? 'bg-emerald-100 text-emerald-600' : notification.type === 'critical' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'}`}>
+                    {notification.type === 'success' ? <CheckCircle2 size={32} strokeWidth={2.5} /> : <AlertTriangle size={32} strokeWidth={2.5} />}
+                 </div>
+                 <h3 className="text-[18px] font-bold text-slate-900 mb-2">{notification.title}</h3>
+                 <p className="text-[14px] text-slate-500 mb-6">{notification.message}</p>
+                 <button onClick={() => setNotification({ ...notification, isOpen: false })} className={`w-full py-3.5 rounded-xl font-bold text-white transition shadow-lg ${notification.type === 'success' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30' : notification.type === 'critical' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/30' : 'bg-[#4338ca] hover:bg-blue-700 shadow-blue-500/30'}`}>
+                    Entendido
+                 </button>
               </motion.div>
            </div>
         )}
